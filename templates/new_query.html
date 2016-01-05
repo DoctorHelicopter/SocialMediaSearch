@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}
+New Query
+{% endblock %}
+
+{% block content %}
+{{msg}}
+<br>
+<form action="/newquery" method="POST">
+    Sites to search:<br>
+    <input type="checkbox" name="site" value="reddit"> Reddit
+    <input type="checkbox" name="site" value="facebook"> Facebook<br>
+    <input type="checkbox" name="site" value="twitter"> Twitter
+    <input type="checkbox" name="site" value="instagram"> Instagram<br>
+    <input type="text" name="keywords" placeholder="Keyword(s)">Separated by commas<br>
+    <input type="text" name="frequency" placeholder="Frequency">In seconds; leave blank for single immediate run<br>
+    <input type="checkbox" name="runnow" value="yes"> Run now?<br>
+    <input type="submit" value="Submit" />
+</form>
+{% endblock %}
