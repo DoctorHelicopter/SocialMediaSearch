@@ -50,8 +50,6 @@ def menu_choice():
         return redirect(url_for('newquery'))
     elif request.form['choice'] == 'View Existing Queries':
         return redirect(url_for('queries'))
-    elif request.form['choice'] == 'Create New Scheduled Query':
-        return redirect(url_for('newschedule'))
     elif request.form['choice'] == 'View Scheduled Query Results':
         return redirect(url_for('schedules'))
     #If somehow your choice wasn't on the list (you made a custom request for some reason...) then show what you managed to enter on a test page I made instead of passing through
@@ -93,22 +91,51 @@ def newquery():
             message = ''
         return render_template('new_query.html', msg=message)
 
-@app.route('/queries', methods=['GET'])
+@app.route('/queries', methods=['POST','GET'])
 def queries():
-    #show all existing queries for the current user
-    #ability to select multiple and run immediately
-    pass
-
-@app.route('/newschedule', methods=['POST','GET'])
-def newschedule():
-    #ability to select a set of queries
-    #ability to create a schedule (daily, hourly, etc)
-    pass
+    qlist = g.db.execute("select * from QUERIES join USERS on USERS.UID=QUERIES.UID where QUERIES.UID=?",(session['uid'],)).fetchall()
+    print qlist
+    if request.method == 'GET':
+        #show all existing queries for the current user
+        pass #don't need to do anything else
+    elif request.method == 'POST': #Do logic here
+        todo = request.form['todo']
+        selected = request.form.getlist('selected')
+        #ability to delete selected
+        if todo == 'Delete selected':
+            for s in selected: #should I have a pop-up confirmation? Maybe. That's a javascript thing
+                g.db.execute("delete from QUERIES where QID=?",(s,))
+            g.db.commit()
+        #ability to select multiple and run immediately
+        elif todo == 'Run selected immediately':
+            #Use functions in interact.py to run searches based on selections
+            pass
+        #ability to create a schedule for the selected queries
+        elif todo == 'Create schedule for selected':
+            session['selected'] = selected #save what was selected so the scheduler can use the list
+            return redirect(url_for('newschedule'))
+    return render_template('queries.html',qlist=qlist)
 
 @app.route('/schedules', methods=['GET'])
 def schedules():
     #show all existing schedules for the current user
+    schedules = g.db.execute("select * from SCHEDULES join USERS on SCHEDULES.UID=USERS.UID where SCHEDULES.UID=?", (session['uid'],)).fetchall()
     #ability to select a schedule and list results from all time, split by runtime
+    return render_template('schedules.html', schedules=schedules)
+    
+@app.route('/newschedule', methods=['POST'])
+def newschedule():
+    #some sort of UI to select a freqency to run
+    #add chosen schedule connected to selected QIDs to the database table
+    #return to the schedule list
+    return redirect(url_for('schedules'))
+    
+@app.route('/schedules/<sid>/results', methods=['POST'])
+def results(sid):
+    #show results for the selected schedule for a given time periods
+    results = g.db.execute("select * from RESULTS where SID=?", (sid,)).fetchall()
+    #ability to export to csv
+    ##then either download immediately or email to someone
     pass
 
 def connect_db():

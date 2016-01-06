@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Existing Queries{% endblock %}
+{% block content %}
+
+<form action="/queries" method="post">
+    <div class="tab">
+        <table>
+            <thead>
+                <tr>
+                    <td>SITE</td>
+                    <td>KEYWORD</td>
+                    <td>CREATED BY</td>
+                </tr>
+            </thead>
+            {% for q in qlist %}
+                <tr>
+                    <td>{{q[2]}}</td>
+                    <td>{{q[3]}}</td>
+                    <td>{{q[7]}}</td>
+                    <td><input type="checkbox" name="selected" value="{{q[0]}}"></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <br>
+    <input type="submit" name="todo" value="Delete selected">
+    <input type="submit" name="todo" value="Run selected immediately">
+    <input type="submit" name="todo" value="Create schedule for selected">
+</form>
+{% endblock %}
