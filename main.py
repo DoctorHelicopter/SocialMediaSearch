@@ -123,7 +123,7 @@ def schedules():
     #ability to select a schedule and list results from all time, split by runtime
     return render_template('schedules.html', schedules=schedules)
     
-@app.route('/newschedule', methods=['POST'])
+@app.route('/newschedule', methods=['POST','GET'])
 def newschedule():
     #some sort of UI to select a freqency to run
     #add chosen schedule connected to selected QIDs to the database table
@@ -136,7 +136,7 @@ def results(sid):
     results = g.db.execute("select * from RESULTS where SID=?", (sid,)).fetchall()
     #ability to export to csv
     ##then either download immediately or email to someone
-    pass
+    return render_template('results.html',results=results)
 
 def connect_db():
     return sq3.connect(app.config['DATABASE'])
