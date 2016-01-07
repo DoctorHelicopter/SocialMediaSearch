@@ -30,10 +30,10 @@ def login():
             print "Users exists: ", session['uid']
             g.db.execute("update USERS set LAST_LOGON=datetime('now','localtime') WHERE USERNAME=?", (session['username'],))
             g.db.commit()
-        else: #create a new user automatically...because lazy
+        else: #create a new user automatically...because it's easy
             #should probably prompt for more info here...but I don't use the other columns yet so it's backburner
             print "Creating new user"
-            g.db.execute("insert into USERS (UID, USERNAME, LAST_LOGON) values (?, ?, datetime('now','localtime'))",(str(uuid4()),session['username']))
+            g.db.execute("insert into USERS (UID, USERNAME, EMAIL, LAST_LOGON) values (?, ?, ?, datetime('now','localtime'))",(str(uuid4()),session['username'], request.form['email']))
             g.db.commit()
         return redirect(url_for('menu'))
     #If you tried to go to this page without giving a username, redirect to login - username is required
