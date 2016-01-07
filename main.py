@@ -23,9 +23,10 @@ def login():
     if request.form['username'] not in [None,'']:
         #This is my really lazy security - if fleshed out I'll add some real stuff here
         session['username'] = request.form['username']
-        users = g.db.execute("select UID, USERNAME from USERS where USERNAME=?", (session['username'],)).fetchall()
+        users = g.db.execute("select UID, USERNAME, EMAIL from USERS where USERNAME=?", (session['username'],)).fetchall()
         if len(users)>0: #user exists, update logon time and keep going
             session['uid'] = users[0][0] #Grab the first UID that shows up. I'm assuming usernames are unique. I need to check for that later, but theoretically this should keep them unique anyway.
+            session['email'] = users[0][2]
             print "Users exists: ", session['uid']
             g.db.execute("update USERS set LAST_LOGON=datetime('now','localtime') WHERE USERNAME=?", (session['username'],))
             g.db.commit()
@@ -58,6 +59,7 @@ def menu_choice():
 
 @app.route('/newquery', methods=['POST','GET'])
 def newquery():
+    qlist = []
     if request.method == 'GET':
         #If you did a GET from the menu, just show the form
         #technically...it was a post. But there was no data, so it ends up coming through as a get. Is this a hacky workaround? Yes. Does it matter if it works? Maybe.
@@ -77,15 +79,20 @@ def newquery():
                     })
         #Now we have a list of statements that we know will work. 
         for st in statements:
-            g.db.execute(sql, (str(uuid4()), session['uid'], st['site'], st['keyword'], st['frequency']))
+            qid = str(uuid4())
+            qlist.append(qid)
+            g.db.execute(sql, qid, session['uid'], st['site'], st['keyword'], st['frequency'])
             g.db.commit()
 
         runs = request.form.getlist('runnow')
         if len(runs)>0 and runs[0] == 'yes':
             #run the most recently added queries and send an email
             print "Running now"
-            pass
-        if len(statements)>0:
+            results = run_search(qlist)
+            f = create_csv(results)
+            send_email(f,[session['email']])
+            message = 'Sucessfully created and ran query'
+        elif len(statements)>0:
             message = 'Successfully created a new query'
         else:
             message = ''
@@ -102,7 +109,9 @@ def queries():
         todo = request.form['todo']
         selected = request.form.getlist('selected')
         #ability to delete selected
-        if todo == 'Delete selected':
+        if len(selected)==0:
+            return render_template('queries.html',qlist=qlist,message="You didn't select anything!")
+        elif todo == 'Delete selected':
             for s in selected: #should I have a pop-up confirmation? Maybe. That's a javascript thing
                 g.db.execute("delete from QUERIES where QID=?",(s,))
             g.db.commit()
@@ -119,8 +128,9 @@ def queries():
 @app.route('/schedules', methods=['GET'])
 def schedules():
     #show all existing schedules for the current user
-    schedules = g.db.execute("select * from SCHEDULES join USERS on SCHEDULES.UID=USERS.UID where SCHEDULES.UID=?", (session['uid'],)).fetchall()
+    schedules = g.db.execute("select * from SCHEDULES join USERS on SCHEDULES.UID=USERS.UID join QUERIES on QUERIES.QID=SCHEDULES.QID where SCHEDULES.UID=?", (session['uid'],)).fetchall()
     #ability to select a schedule and list results from all time, split by runtime
+    print schedules
     return render_template('schedules.html', schedules=schedules)
     
 @app.route('/newschedule', methods=['POST','GET'])
@@ -128,15 +138,45 @@ def newschedule():
     #some sort of UI to select a freqency to run
     #add chosen schedule connected to selected QIDs to the database table
     #return to the schedule list
-    return redirect(url_for('schedules'))
+    if request.method == 'GET':
+        return render_template('newschedule.html')
+    elif request.method == 'POST':
+        #do logic
+        tstart = request.form['tstart']
+        tend = request.form['tend']
+        freq = request.form['freq']
+        queries = session['selected']
+        for q in queries:
+            g.db.execute("insert into SCHEDULES (SID, QID, UID, CREATED, LAST_RUN, NEXT_RUN, TIME_START, TIME_END, FREQUENCY) values (?,?,?,datetime('now','localtime'),datetime('now','localtime'),datetime('now','localtime','+%s seconds'),?,?,?)"%freq,(str(uuid4()),q,session['uid'],tstart,tend,freq))
+        g.db.commit()
+        return redirect(url_for('schedules'))
     
-@app.route('/schedules/<sid>/results', methods=['POST'])
-def results(sid):
+@app.route('/results', methods=['POST','GET'])
+def results():
+    results = []
+    todo = request.form['todo']
     #show results for the selected schedule for a given time periods
-    results = g.db.execute("select * from RESULTS where SID=?", (sid,)).fetchall()
+    selected = request.form.getlist('selected') 
+    if todo == 'Delete selected':
+        for s in selected: #should I have a pop-up confirmation? Maybe. That's a javascript thing
+            g.db.execute("delete from SCHEDULES where SID=?",(s,))
+        g.db.commit()
+        return redirect(url_for('schedules'))
+    elif todo == 'View results for selected':
+        for s in selected:
+            results.append(g.db.execute("select * from RESULTS where SID=?", (s,)).fetchall())
     #ability to export to csv
     ##then either download immediately or email to someone
     return render_template('results.html',results=results)
+    
+@app.route('/export', methods=['POST'])
+def export():
+    #This is the function that will call the exporter and then redirect to the results page
+    results = request.form.getlist('selected')
+    dest = [d.strip() for d in request.form['dest'].split(',')]
+    f = create_csv(results)
+    send_email(f,dest)
+    return redirect(url_for('results'))
 
 def connect_db():
     return sq3.connect(app.config['DATABASE'])

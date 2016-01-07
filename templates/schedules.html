@@ -1,4 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Existing Schedules{% endblock %}
 {% block content %}
+<form action="/results" method="post">
+    <div class="tab">
+        <table>
+            <thead>
+                <tr>
+                    <td>SITE</td>
+                    <td>KEYWORD</td>
+                    <td>LAST RUN</td>
+                    <td>NEXT RUN</td>
+                    <td>CREATED BY</td>
+                </tr>
+            </thead>
+            {% for s in schedules %}
+                <tr>
+                    <td>{{s[16]}}</td>
+                    <td>{{s[17]}}</td>
+                    <td>{{s[4]}}</td>
+                    <td>{{s[5]}}</td>
+                    <td>{{s[10]}}</td>
+                    <td><input type="checkbox" name="selected" value="{{s[0]}}"></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <br>
+    <input type="submit" name="todo" value="Delete selected">
+    <input type="submit" name="todo" value="View results for selected">
+</form>
 {% endblock %}

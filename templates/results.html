@@ -1,4 +1,32 @@
 {% extends "base.html" %}
 {% block title %}Query Results{% endblock %}
 {% block content %}
+<form action="/export" method="post">
+    <input type="text" name="dest" placeholder="Recipient(s)">Comma-separated list<br>
+    <!-- table here-->
+    <table>
+    <thead>
+        <tr>
+            <td>DATE RUN</td>
+            <td>SITE</td>
+            <td>TITLE</td>
+            <td>MATCHED KEYWORDS</td>
+            <td>LINK</td>
+            <td></td>
+        </tr>
+    </thead>
+        {% for r in results %}
+        <tr>
+            <td>{{r[2]}}</td>
+            <td>{{r[3]}}</td>
+            <td>{{r[4]}}</td>
+            <td>{{r[6]}}</td>
+            <td>{{r[7]}}</td>
+            <td><input type="checkbox" name="selected" value="{{r[0]}}"></td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <input type="submit" value="Export selected">
+</form>
 {% endblock %}
