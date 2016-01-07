@@ -4,6 +4,7 @@
 <form action='/newschedule' method='post'>
     <input data-provide="datepicker" name="tstart" placeholder="Start Date" required>
     <input data-provide="datepicker" name="tend" placeholder="End Date">
+    <!-- seconds was easiet to implement, but I could add a dropdown for different increments (minutes, days, etc)-->
     <input type="text" name="freq" placeholder="Frequency (sec)" required>
     <input type="submit" value="Submit">
 </form>

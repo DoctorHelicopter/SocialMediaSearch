@@ -67,21 +67,20 @@ def newquery():
     elif request.method == 'POST':
         #If it was posted with content, make sure it worked, then give success message
         #do logic, then return to the page with success message
-        sql = "insert into QUERIES (QID, UID, SITE, KEYWORD, FREQUENCY, CREATED) VALUES (?, ?, ?, ?, ?, datetime('now','localtime'))" 
+        sql = "insert into QUERIES (QID, UID, SITE, KEYWORD, CREATED) VALUES (?, ?, ?, ?, datetime('now','localtime'))" 
         statements = []
         for s in request.form.getlist('site'): #Check through all of the selected sites
             print s
             for kw in request.form['keywords'].split(','): #iterate through our KWs
                 #gather them in a list first. That way, if there's a problem with any of them, the whole thing will abort instead of writing partial records
                 statements.append({'site'       : str(s),
-                                   'keyword'    : str(kw).strip(),
-                                   'frequency'  : int(request.form['frequency']) if request.form['frequency']!='' else 0
+                                   'keyword'    : str(kw).strip()
                     })
         #Now we have a list of statements that we know will work. 
         for st in statements:
             qid = str(uuid4())
             qlist.append(qid)
-            g.db.execute(sql, (qid, session['uid'], st['site'], st['keyword'], st['frequency']))
+            g.db.execute(sql, (qid, session['uid'], st['site'], st['keyword']))
             g.db.commit()
 
         runs = request.form.getlist('runnow')
