@@ -6,7 +6,7 @@ import pandas as pd
 from uuid import uuid4
 from interact import *
 
-DATABASE = 'static/db/sms.db' #local sqlite file
+DATABASE = 'static/db/sms.db' #local sqlite file. This was done for portability, if it's hosted on a dedicated server all of the sqlite stuff should be translated to something more robust.
 DEBUG = True
 
 app = Flask(__name__)
@@ -63,7 +63,7 @@ def newquery():
     if request.method == 'GET':
         #If you did a GET from the menu, just show the form
         #technically...it was a post. But there was no data, so it ends up coming through as a get. Is this a hacky workaround? Yes. Does it matter if it works? Maybe.
-        return render_template('new_query.html')
+        return render_template('newquery.html')
     elif request.method == 'POST':
         #If it was posted with content, make sure it worked, then give success message
         #do logic, then return to the page with success message
@@ -75,13 +75,13 @@ def newquery():
                 #gather them in a list first. That way, if there's a problem with any of them, the whole thing will abort instead of writing partial records
                 statements.append({'site'       : str(s),
                                    'keyword'    : str(kw).strip(),
-                                   'frequency'  : int(request.form['frequency'])
+                                   'frequency'  : int(request.form['frequency']) if request.form['frequency']!='' else 0
                     })
         #Now we have a list of statements that we know will work. 
         for st in statements:
             qid = str(uuid4())
             qlist.append(qid)
-            g.db.execute(sql, qid, session['uid'], st['site'], st['keyword'], st['frequency'])
+            g.db.execute(sql, (qid, session['uid'], st['site'], st['keyword'], st['frequency']))
             g.db.commit()
 
         runs = request.form.getlist('runnow')
@@ -96,12 +96,10 @@ def newquery():
             message = 'Successfully created a new query'
         else:
             message = ''
-        return render_template('new_query.html', msg=message)
+        return render_template('newquery.html', msg=message)
 
 @app.route('/queries', methods=['POST','GET'])
 def queries():
-    qlist = g.db.execute("select * from QUERIES join USERS on USERS.UID=QUERIES.UID where QUERIES.UID=?",(session['uid'],)).fetchall()
-    print qlist
     if request.method == 'GET':
         #show all existing queries for the current user
         pass #don't need to do anything else
@@ -110,6 +108,8 @@ def queries():
         selected = request.form.getlist('selected')
         #ability to delete selected
         if len(selected)==0:
+            qlist = g.db.execute("select * from QUERIES join USERS on USERS.UID=QUERIES.UID where QUERIES.UID=?",(session['uid'],)).fetchall()
+            print qlist
             return render_template('queries.html',qlist=qlist,message="You didn't select anything!")
         elif todo == 'Delete selected':
             for s in selected: #should I have a pop-up confirmation? Maybe. That's a javascript thing
@@ -118,11 +118,15 @@ def queries():
         #ability to select multiple and run immediately
         elif todo == 'Run selected immediately':
             #Use functions in interact.py to run searches based on selections
-            pass
+            results = request.form.getlist('selected')
+            f = create_csv(results)
+            send_email(f,session['email'])
         #ability to create a schedule for the selected queries
         elif todo == 'Create schedule for selected':
             session['selected'] = selected #save what was selected so the scheduler can use the list
             return redirect(url_for('newschedule'))
+    qlist = g.db.execute("select * from QUERIES join USERS on USERS.UID=QUERIES.UID where QUERIES.UID=?",(session['uid'],)).fetchall()
+    print qlist
     return render_template('queries.html',qlist=qlist)
 
 @app.route('/schedules', methods=['GET'])

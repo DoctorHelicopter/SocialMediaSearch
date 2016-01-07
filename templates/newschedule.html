@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Existing Schedules{% endblock %}
 {% block content %}
-This will let you make a new schedule
 <form action='/newschedule' method='post'>
     <input data-provide="datepicker" name="tstart" placeholder="Start Date" required>
     <input data-provide="datepicker" name="tend" placeholder="End Date">

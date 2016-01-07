@@ -1,12 +1,14 @@
 <html lang='en'>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Latest compiled and minified CSS -->
+    <!-- I chose Bootstrap for my theme and components; I'm not sure how your internal apps are normally styled, but I'm familiar with this.-->
+    <!-- Unfortunately, I didn't really get the chance to pretty this site up. But I could spend a couple of days doing that pretty easily. -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
     <!-- Optional theme -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <!-- Latest version of open source project bootstrap-datepicker (https://bootstrap-datepicker.readthedocs.org/en/latest/)-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.1/js/bootstrap-datepicker.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.1/css/bootstrap-datepicker3.standalone.min.css">
     <link rel='stylesheet' href="/static/css/style.css" />
@@ -17,5 +19,8 @@
     <div id="content">{% block content %}{% endblock %}</div>
 </body>
 {% block scripts %}
+<!-- So, currently I don't have anything done in JS. Some of the things I did in Python could/should probably be translated.
+     I didn't get to the point where it was really necessary, and it was less time-consuming to just write it in Python.
+     In the future, I would use it for animations, dynamic object creation, and client-side data validation-->
 {% endblock %}
 </html>
